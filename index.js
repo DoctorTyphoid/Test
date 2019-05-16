@@ -1,7 +1,14 @@
 require("dotenv").config();
 const tmi = require("tmi.js");
+fs = require("fs");
 
-var userChatList = [];
+if (fs.existsSync("./data.json")) {
+  var data = fs.readFileSync("./data.json");
+  var userChatList = JSON.parse(data);
+} else {
+  var userChatList = [];
+}
+
 const options = {
   options: {
     debug: true
@@ -30,15 +37,21 @@ client.on("chat", (channel, user, message, self) => {
   //   client.action("au_thathurt", "Leaving channel");
   //   client.part("au_thathurt");
   // }
-  if (message === "!mostchats") {
+  if (message === "!topchatters") {
     var topFive = sortLeaderboard().slice(0, 5);
     var response = "Top Chatters: ";
     topFive.forEach((user, i) => {
       response += i + 1 + `. ${user.username}(${user.count}) `;
     });
-    client.action(process.env.BOT_CHANNEL, response);
+    client.say(process.env.BOT_CHANNEL, response);
   } else {
     countChats(user);
+  }
+  if (message === "@DocTsBot") {
+    client.say(
+      process.env.BOT_CHANNEL,
+      `${user.username}, don't @ me bro! Kappa `
+    );
   }
 });
 
@@ -49,12 +62,10 @@ client.on(
     let senderCount = ~~userstate["msg-param-sender-count"];
     let senderName = username;
     let userReceived = recipient;
-    client.action(
-      "au_thathurt",
-      `${userReceived} received a subgift from ${senderName}. ${senderName} has given a total of ${senderCount} gifts in this channel!`
+    client.say(
+      process.env.BOT_CHANNEL,
+      `${userReceived} received a subgift from ${senderName}! PogChamp`
     );
-
-    //client.action("doctortyphoid", `Hello ${user["display-name"]}`);
   }
 );
 
@@ -74,8 +85,11 @@ function countChats(user) {
       count: userChatList[userIndex].count + 1
     };
   }
-  //console.log(userChatList);
+  fs.writeFile("./data.json", JSON.stringify(userChatList), err => {
+    if (err) console.error(err);
+  });
 }
+
 function sortLeaderboard() {
   var sorted = userChatList.sort((a, b) => {
     const count = a.count;
@@ -89,7 +103,7 @@ function sortLeaderboard() {
     return comparison;
   });
   return sorted;
-  console.log(sorted);
+  //console.log(sorted);
 }
 //1. DoctorTyphoid: 200000, 2. SoAndSO: 20
 
